@@ -72,6 +72,3 @@ else
     echo "Error..."
     exit 1
 fi
-
-echo -e "${BLUE}4. stop docker...${NC}"
-docker compose -f dataproc/spark-docker-compose.yml down
