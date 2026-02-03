@@ -1,0 +1,216 @@
+# Ingestions of Reports (tables):
+    - dim_rate_code
+    - dim_vendor
+    - dim_zone
+    - fact_trips
+
+---
+
+### Architecture & Design
+
+#### Overall pipeline architecture
+- The architecture is divided into stages
+    - landing extract data from source
+    - bronze transform data into parquet
+    - silver apply some transformations and new fields
+    - gold write data into PostgreSQL
+
+#### Data flow from ingestion to output
+
+reprocesssing:
+data accepts _START_DATE AND _END_DATE, for load data into a period of time
+
+---
+
+### Technical Decisions
+
+#### Why this language and approach?
+- The language python it's very popular, and has a low learning curve, so it's easier to find people who work with that
+
+- About the approach, i had little time, i have to handle with my tasks in my current job.
+In a perfect world, i would make this pipeline with Medallion Architecture, or other taking care about the costs with
+one layer for landing, bronze, silver and gold layers or raw_data and curated_data or data mesh, depends which costs we have to take care 
+when we talk about storage billions of data and business rules complexity.
+
+#### Batch vs streaming considerations
+- Batch has less costs with processing, and the hour whe the data it's avaiable for consume need to be aling with the client
+- Streaming has more costs with processing, and have to take care with errors and data at the pipeline to validate, reject and analyse in that case 
+we always have to be ahead.
+
+#### How idempotency and reprocessing would work
+- the both idempotency and reprocessing, works in the same way, if the pipeline reprocess the same data 100 times, it will be the same data. 
+---
+
+### Production Readiness
+
+#### How this would run in:
+- AWS / Azure / GCP
+
+- GCP
+    - Documentation of Architecture with details about the process and one Draw with architecture.
+
+    - Trigger to start the process (Scheduler or Cloud Function to check data and Run the Job)
+
+    - Cloud Tasks if it's necessary to reschedule the execution
+
+    - Job 1 in Dataproc to process data and storage at bucket
+    - Integration tests in pipeline
+    - check data quality on dataproc or other way
+
+    - Job 2 in Dataproc to process data and storage at bucket or Bigquery
+    - Integration tests in pipeline
+    - check data quality on dataproc or other way
+
+    - ingestion at BigQuery partitioning table for performance
+
+    - End with some visualization tool as PowerBI or Tableu or etc.
+
+- Azure
+    - Documentation of Architecture with details about the process and one Draw with architecture.
+
+    - Trigger to start the process (Azure Data Factory, or some Azure web function)
+
+    - Job 1 in Databricks to process data and storage at bucket
+    - Integration tests in pipeline
+    - check data quality on databricks or other way
+
+    - Job 2 in Databricks to process data and storage at bucket or Bigquery
+    - Integration tests in pipeline
+    - check data quality on databricks or other way
+
+    - ingestion at Unity Catalog partitioning table for performance
+
+    - End with some visualization tool as PowerBI or Tableu or etc.
+
+- Snowflake or AWS
+    I dont have experience work with snow flake or AWS but the concepts are the same of pipelines above
+
+    - Documentation of Architecture with details about the process and one Draw with architecture.
+
+    - Trigger to start the process
+
+    - Job 1 in Spark to process data and storage at some bucket (datalake)
+    - Integration tests in pipeline
+    - check data quality on databricks or other way
+
+    - Job 2 in Spark to process data and storage at some bucket (datalake)
+    - Integration tests in pipeline
+    - check data quality on databricks or other way
+
+    - ingestion at some Datawarehouse partitioning table for performance
+
+    - End with some visualization tool as PowerBI or Tableu or etc.
+
+#### Where dbt, Airflow, or similar tools would fit
+    - DBT could make some business rules validation, it can be made at Spark, and could make data lineage
+
+    - Airflow could orchestrate de process and start the process with some schedule trigger or some sensor
+    but airflow it's always runing, even if any process are running.
+
+
+---
+
+### Data Governance
+- It's could be made with polices at Bigquery and access management at the datasets and at the column of tables (Column-level security).
+- It's could be made with polices at Unity Catalog and access management at the catalogs and at the column of tables (Column-level security).
+
+Both of them could me made with retrict access of visualization tool, like a new layer of access control.
+
+#### Handling PII
+Could be made with polices applied to columns to data masking (Hashing / Pseudonymization)
+
+#### Data quality checks
+Could be made in middle step before delivey data do consuming of client. (Using DBT, Spark or any other tool with this function)
+
+#### Schema evolution strategy
+It's not the only solution, but i like to block the schema at bronze or raw layer and work with merge schema at silver or curated layer.
+This blocks incorrect fields during loading. if there is some new field at the schema, i can add it to the model of schema in pyspark or other tool.
+
+---
+
+### Scaling
+- What changes if data volume grows 100x?
+I will need more workers
+
+- Where are the current bottlenecks?
+This is a load for especific table and registers, if its go to production, we need to add some resources like datawarehouse,
+more workers, terraform for infrastructure, a trigger for the process, quality checks, integrations tests.
+
+---
+
+### Delivery Instructions
+Please submit:
+- Source code (public Git repository)
+- README.md
+- Clear instructions on how to run the project locally
+
+---
+### Install Instructions
+
+1. First Step:
+    [Install docker](https://docs.docker.com/get-started/get-docker/)
+
+2. Clone the repo:
+    [Git Clone](https://github.com/robusinessintelligence/spark_postgres_simple_etl.git)
+
+    Example command:
+    ```bash
+    git clone https://github.com/robusinessintelligence/spark_postgres_simple_etl.git
+    ```
+
+3. Run docker at terminal:
+    ```bash
+    <!-- run docker -->
+    docker compose -f dataproc/spark-docker-compose.yml up -d --scale spark-worker=3 
+
+    <!-- stop docker -->
+    docker compose -f dataproc/spark-docker-compose.yml down
+    ```
+
+4. Execute pipelines example:
+
+    ```bash
+    <!-- landing -->
+
+        <!-- run job example -->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/yellow_taxi_trip.py
+
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/taxi_zone_lookup.py
+        
+
+        <!-- run job with parameters-->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/yellow_taxi_trip.py '{"_PROCESS_DATE": "2026-01-01"}'
+    
+
+    <!-- bronze -->
+
+        <!-- run job example -->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/yellow_taxi_trip.py
+
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/taxi_zone_lookup.py
+        
+
+        <!-- run job with parameters-->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/yellow_taxi_trip.py '{"_START_DATE": "2025-10-01", "_END_DATE": "2026-02-01"}'
+    
+
+    <!-- silver -->
+
+        <!-- run job example -->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/yellow_taxi_trip.py
+
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/taxi_zone_lookup.py
+
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/aux_dim_tables.py
+    
+
+    <!-- gold -->
+
+        <!-- run job example -->
+
+        docker exec -it spark-master /opt/spark/bin/spark-submit \
+            --master spark://spark-master:7077 \
+            --packages org.postgresql:postgresql:42.6.0 \
+            --conf "spark.driver.extraClassPath=/root/.ivy2/jars/*" \
+            --conf "spark.executor.extraClassPath=/root/.ivy2/jars/*" \
+            /jobs/process/gold/write_to_db.py
