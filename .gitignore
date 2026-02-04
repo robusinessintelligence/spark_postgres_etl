@@ -8,7 +8,7 @@ __pycache__/
 
 # folders
 datalake
-
+terraform/.terraform
 
 # Distribution / packaging
 .Python
