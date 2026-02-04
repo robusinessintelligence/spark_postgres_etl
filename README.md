@@ -178,9 +178,9 @@ more workers, terraform for infrastructure, a trigger for the process, quality c
     <!-- landing -->
 
         <!-- run job example -->
-        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/yellow_taxi_trip.py
-
         docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/taxi_zone_lookup.py
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/yellow_taxi_trip.py '{"_PROCESS_DATE": "2025-05-01"}'
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/landing/yellow_taxi_trip.py '{"_PROCESS_DATE": "2025-06-01"}'
         
 
         <!-- run job with parameters-->
@@ -190,22 +190,17 @@ more workers, terraform for infrastructure, a trigger for the process, quality c
     <!-- bronze -->
 
         <!-- run job example -->
-        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/yellow_taxi_trip.py
-
         docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/taxi_zone_lookup.py
-        
 
-        <!-- run job with parameters-->
-        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/yellow_taxi_trip.py '{"_START_DATE": "2025-10-01", "_END_DATE": "2026-02-01"}'
+        <!-- accept range of dates -->
+        docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/bronze/yellow_taxi_trip.py '{"_START_DATE": "2025-05-01", "_END_DATE": "2025-06-01"}'
     
 
     <!-- silver -->
 
         <!-- run job example -->
         docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/yellow_taxi_trip.py
-
         docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/taxi_zone_lookup.py
-
         docker exec -it spark-master /opt/spark/bin/spark-submit /jobs/process/silver/aux_dim_tables.py
     
 
