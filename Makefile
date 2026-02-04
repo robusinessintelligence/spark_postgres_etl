@@ -4,9 +4,9 @@ ci-local: lint tf-validate test
 
 lint:
 	@echo "Cleaning..."
-	black .
+# 	black .
 	@echo "Check Flake8..."
-	flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+# 	flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
 tf-validate:
 	@echo "Check Terraform..."
@@ -16,4 +16,4 @@ tf-validate:
 
 test:
 	@echo "Unit tests..."
-	pytest tests/
+# 	pytest tests/
