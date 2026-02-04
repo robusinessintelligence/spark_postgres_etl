@@ -8,7 +8,12 @@ __pycache__/
 
 # folders
 datalake
-terraform/.terraform
+
+# Terraform temporary files
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
 
 # Distribution / packaging
 .Python
