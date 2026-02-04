@@ -138,24 +138,17 @@ more workers, terraform for infrastructure, a trigger for the process, quality c
 
 ---
 
-### Delivery Instructions
-Please submit:
-- Source code (public Git repository)
-- README.md
-- Clear instructions on how to run the project locally
-
----
 ### Install Instructions
 
 1. First Step:
     [Install docker](https://docs.docker.com/get-started/get-docker/)
 
 2. Clone the repo:
-    [Git Clone](https://github.com/robusinessintelligence/spark_postgres_simple_etl.git)
+    [Git Clone](https://github.com/robusinessintelligence/spark_postgres_etl.git)
 
     Example command:
     ```bash
-    git clone https://github.com/robusinessintelligence/spark_postgres_simple_etl.git
+    git clone https://github.com/robusinessintelligence/spark_postgres_etl.git
     ```
 
 3. Run docker at terminal:
@@ -168,6 +161,18 @@ Please submit:
     ```
 
 4. Execute pipelines example:
+
+    ```bash
+    At root folder execute the script that runs the all pipeline:
+
+    ./exec_pipeline.sh
+
+    or 
+
+    source exec_pipeline.sh
+    ```
+
+    Or if do you prefere run job by job
 
     ```bash
     <!-- landing -->
@@ -214,3 +219,4 @@ Please submit:
             --conf "spark.driver.extraClassPath=/root/.ivy2/jars/*" \
             --conf "spark.executor.extraClassPath=/root/.ivy2/jars/*" \
             /jobs/process/gold/write_to_db.py
+    ```
