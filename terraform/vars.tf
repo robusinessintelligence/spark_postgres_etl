@@ -26,8 +26,8 @@ variable "data_project" {
 }
 
 variable "service_account_email" {
-    type        = string
-    description = "email for service account"
+  type        = string
+  description = "email for service account"
 }
 
 variable "region" {
