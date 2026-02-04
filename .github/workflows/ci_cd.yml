@@ -1,0 +1,53 @@
+name: Data Engineering Pipeline CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # --- LINTING & FORMATTING ---
+      - name: Install Linting Tools
+        run: pip install black flake8
+
+      - name: Check Formatting (Black)
+        run: black --check .
+
+      - name: Lint with Flake8
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      # --- TERRAFORM VALIDATION ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive ./terraform
+
+      - name: Terraform Validate
+        run: terraform -chdir=./terraform init -backend=false && terraform -chdir=./terraform validate
+
+      # --- SPARK UNIT TESTS ---
+      - name: Install Spark & Java
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jdk
+          pip install pyspark pytest
+
+      - name: Run PySpark Unit Tests
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/default-java
+          pytest tests/ # Certifique-se de que sua pasta de testes existe
